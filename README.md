@@ -220,16 +220,38 @@ forecast = mean(volatility)
 ### **Installation**
 
 ```bash
+# Create virtual environment
+python -m venv .venv
+
+# Activate virtual environment
+# Windows:
+.venv\Scripts\activate
+# Linux/Mac:
+source .venv/bin/activate
+
 # Install dependencies
 pip install -r requirements.txt
 
 # Key packages:
 # - numpy, pandas, scipy, matplotlib
+# - arch (for GARCH models)
 # - nolds (for robust Hurst estimation)
 # - MetaTrader5 (for live data)
 ```
 
-### **Run All 7 Steps**
+### **Configuration**
+
+Edit `config.py` to set your data parameters:
+
+```python
+SYMBOL = "EURUSD"
+TIMEFRAME_MT5 = "M15"  # 15-minute bars
+START_DATE = "2025-05-15"
+END_DATE = "2025-07-01"
+FORECAST_DAYS = 25
+```
+
+### **Run MMAR Model (Steps 1-7)**
 
 ```bash
 # Step 1: Check fractality (moment scaling)
@@ -254,44 +276,38 @@ python run_step6.py
 python run_step7.py
 ```
 
+### **Compare MMAR vs GARCH**
+
+After completing all 7 MMAR steps:
+
+```bash
+# Run GARCH models and compare with MMAR
+python run_garch_comparison.py
+
+# This will:
+# 1. Fit GARCH, EGARCH, and GJR-GARCH models
+# 2. Generate forecasts using Zhang's methodology
+# 3. Compare all models against realized volatility
+# 4. Display winner (lowest forecast error)
+```
+
+### **Validate Forecasts**
+
+```bash
+# Compare forecasts with realized volatility
+python run_comparison.py
+
+# Shows:
+# - Forecast accuracy
+# - 95% confidence interval coverage
+# - Forecast error metrics (RMSE, MAPE)
+```
+
 **Each step:**
 1. Loads results from previous step
 2. Runs its analysis
-3. Saves results for next step
-4. Creates diagnostic plots
-
----
-
-## 📊 Understanding Your Forecast
-
-### **Example Output:**
-
-```
-Volatility Forecast:
-  Point estimate: 0.000820
-  Uncertainty (std dev): 0.000010
-  95% Confidence Interval: [0.000801, 0.000840]
-```
-
-### **What Does This Mean?**
-
-**For 5-minute EURUSD data:**
-
-| Timeframe | Volatility | Formula |
-|-----------|-----------|---------|
-| **5-min** | 0.082% | 0.000820 × 100% |
-| **Hourly** | 0.28% | 0.000820 × √12 |
-| **Daily** | 1.39% | 0.000820 × √288 |
-| **Annual** | 22.1% | 0.000820 × √72,576 |
-
-**Is 22% annual volatility realistic for EURUSD?**
-
-✅ **YES!**
-- Calm markets: 8-12%
-- Normal markets: 12-18%
-- Volatile markets: 18-25%
-
-Your forecast of 22% suggests elevated volatility.
+3. Saves results to `results/` directory
+4. Creates diagnostic plots in `plots/` directory
 
 ---
 
@@ -335,39 +351,30 @@ expected_range = vol_forecast * sqrt(288)  # 288 × 5-min in 24h
 MMAR_Forecast/
 │
 ├── 📄 README.md                    # This file
+├── 📄 requirements.txt             # Python dependencies
 ├── ⚙️  config.py                   # Configuration parameters
 ├── 🛠️  utils.py                    # Helper functions
 ├── 📥 data_loader.py               # MT5 integration + data loading
 │
-├── 📊 Step 1: Check Fractality
+├── 📊 MMAR Steps (Steps 1-7)
 │   ├── step1_check_fractality.py   # Partition function analysis
-│   └── run_step1.py                # Runner script
-│
-├── 📊 Step 2: Extract Scaling
 │   ├── step2_extract_scaling.py    # τ(q) extraction + H estimation
-│   └── run_step2.py                # Runner script
-│
-├── 📊 Step 3: Fit Spectrum
 │   ├── step3_fit_spectrum.py       # Legendre transform + distribution fitting
-│   └── run_step3.py                # Runner script
-│
-├── 📊 Step 4: Generate Cascade
 │   ├── step4_generate_cascade.py   # Multiplicative cascade → trading time
-│   └── run_step4.py                # Runner script
-│
-├── 📊 Step 5: Generate FBM
 │   ├── step5_generate_fbm.py       # Davies-Harte FBM generation
-│   └── run_step5.py                # Runner script
-│
-├── 📊 Step 6: Combine Model
 │   ├── step6_combine_model.py      # X(t) = B_H[θ(t)]
-│   └── run_step6.py                # Runner script
+│   ├── step7_monte_carlo.py        # 10,000 Monte Carlo simulations
+│   └── run_step[1-7].py            # Runner scripts for each step
 │
-├── 📊 Step 7: Monte Carlo
-│   ├── step7_monte_carlo.py        # 10,000 simulations
-│   └── run_step7.py                # Runner script
+├── 📊 GARCH Implementation
+│   ├── garch_model.py              # GARCH, EGARCH, GJR-GARCH models
+│   └── run_garch_comparison.py     # MMAR vs GARCH comparison script
 │
-├── 📁 data/                        # Historical price data
+├── 📊 Forecast Validation
+│   ├── compare_forecast.py         # Compare forecast with realized volatility
+│   └── run_comparison.py           # Validation runner script
+│
+├── 📁 data/                        # Historical price data (CSV)
 ├── 📁 results/                     # Pickle files (intermediate results)
 ├── 📁 plots/                       # PNG diagnostic plots
 │
@@ -416,193 +423,6 @@ DATA_DIR = ".../data"       # CSV data
 
 ---
 
-## 📚 Key Concepts
-
-### **Moment Scaling**
-
-The defining property of multifractals:
-
-```
-E(|X(t)|^q) = c(q) × t^(τ(q)+1)
-```
-
-If this holds across multiple time scales → data is multifractal.
-
-### **Self-Similarity**
-
-Zooming in/out reveals similar patterns:
-- 5-min chart looks like hourly chart
-- Daily chart looks like weekly chart
-- This is **scale invariance**
-
-### **Trading Time**
-
-> *"Reliance upon a single time scale leads to inefficiency"* — Mandelbrot
-
-Instead of uniform clock time, MMAR uses **multifractal time**:
-- Fast during volatile periods
-- Slow during calm periods
-- Captures reality: markets don't move uniformly!
-
-### **Why MMAR Outperforms GARCH**
-
-| Feature | GARCH | MMAR |
-|---------|-------|------|
-| Long memory | ❌ (except FIGARCH) | ✅ |
-| Fat tails | ✅ | ✅ |
-| Volatility clustering | ✅ | ✅ |
-| Scale consistency | ❌ | ✅ |
-| Multiple time scales | ❌ | ✅ |
-
-**Paper result:** MMAR had **significantly lower RMSE** than GARCH variants.
-
----
-
-## ⚠️ Important Implementation Notes
-
-### **1. Non-Overlapping Intervals (Step 1)**
-
-✅ **Correct:**
-```python
-# Divide returns into N = len(returns) // delta_t chunks
-# Each chunk is independent
-```
-
-❌ **Wrong:**
-```python
-# Sliding window → artificial correlation
-```
-
-### **2. Hurst Estimation (Step 2)**
-
-✅ **Use nolds.hurst_rs()** (robust R/S method)
-
-❌ **Avoid:** Finding τ(1/H) = 0 numerically (unstable)
-
-Typical values:
-- FX markets: H = 0.48-0.55
-- Stock markets: H = 0.52-0.58
-- H = 0.1 → **ERROR**, re-estimate!
-
-### **3. Multifractality Test (Step 2)**
-
-**Critical:** If τ(q) is linear → data is **monofractal** → MMAR will fail!
-
-Check concavity before proceeding to Step 3.
-
-### **4. Spectrum Fitting (Step 3)**
-
-Use **all 4 distributions**, pick best fit by squared error.
-
-Most common: Lognormal or Gamma
-
-### **5. Monte Carlo (Step 7)**
-
-10,000 simulations = **10-30 minutes** runtime.
-
-For testing: use 100 simulations first.
-
----
-
-## 🎓 Theory Deep Dive
-
-### **Fractional Brownian Motion (FBM)**
-
-Standard Brownian motion has:
-- Independent increments
-- H = 0.5 (no memory)
-
-FBM generalizes this:
-- **Dependent** increments
-- **H ≠ 0.5** (long memory)
-
-**Autocovariance:**
-```
-Cov[dB_H(s), dB_H(t)] ∝ |t-s|^(2H-2)
-```
-
-H > 0.5: Positive autocorrelation (persistence)
-H < 0.5: Negative autocorrelation (anti-persistence)
-
-### **Multiplicative Cascade**
-
-Simple rule → complex pattern:
-
-```
-Step k=0: [1]
-Step k=1: [0.6, 0.4]           (split, multiply by M₁, M₂)
-Step k=2: [0.3, 0.3, 0.2, 0.2] (split each, multiply)
-...
-```
-
-After k=10 steps: 1024 intervals with complex mass distribution.
-
-**Integral = θ(t) = multifractal time**
-
-### **Legendre Transform**
-
-Converts scaling function τ(q) to multifractal spectrum f(α):
-
-```
-α = dτ/dq              (Hölder exponent)
-f(α) = αq - τ(q)       (dimension function)
-```
-
-**Interpretation:**
-- α: Local roughness exponent
-- f(α): Frequency of points with roughness α
-
-Inverted parabola shape → multifractal
-
----
-
-## 🔬 Validation & Testing
-
-### **Step 1: In-Sample Validation**
-
-Compare forecast with realized volatility:
-
-```python
-# After Step 7
-forecast = 0.000820
-
-# Calculate realized volatility from actual data
-realized = np.std(actual_returns)
-
-error = abs(forecast - realized)
-```
-
-### **Step 2: GARCH Comparison**
-
-Implement GARCH(1,1) for same data:
-
-```python
-from arch import arch_model
-
-model = arch_model(returns, vol='Garch', p=1, q=1)
-result = model.fit()
-garch_forecast = result.forecast(horizon=288).variance[-1]
-```
-
-**Expected:** MMAR < GARCH (lower error)
-
-### **Step 3: Out-of-Sample Testing**
-
-```python
-# Train on Jan-Jun 2024
-# Test on Jul-Dec 2024
-
-# Rolling window:
-for month in range(7, 13):
-    train_data = data[:month]
-    test_data = data[month]
-
-    # Run Steps 1-7 on train_data
-    # Compare forecast with test_data
-```
-
----
-
 ## 📖 Further Reading
 
 ### **Foundational Papers**
@@ -635,13 +455,7 @@ for month in range(7, 13):
 
 ## 🤝 Contributing
 
-This is a research implementation. Improvements welcome:
-
-1. **Additional distributions** for Step 3
-2. **Faster cascade generation** (GPU acceleration)
-3. **Real-time forecasting** integration
-4. **GARCH benchmark** comparison
-5. **Walk-forward validation** framework
+This is a research implementation. Improvements to the technical implementation are always welcomed by the public and professionals. 
 
 ---
 
@@ -662,28 +476,6 @@ This code implements academic research. Use at your own risk.
 - **Laurent Calvet & Adlai Fisher** — MMAR theory development
 
 ---
-
-## 📞 Support
-
-For issues with:
-- **Installation:** Check `requirements.txt`
-- **MT5 connection:** Verify `config.py` settings
-- **Low R² in Step 1:** Use more data or lower `MIN_R_SQUARED`
-- **Extreme H values:** Install `nolds` and re-run Step 2
-- **No spectrum points:** Check τ(q) quality in Step 2
-
----
-
-## 🎯 Summary
-
-**MMAR captures what GARCH misses:**
-
-- ✅ Markets have memory (H ≠ 0.5)
-- ✅ Time is not uniform (multifractal θ)
-- ✅ Volatility clusters in complex ways
-- ✅ Same patterns across all time scales
-
-**Result:** More accurate volatility forecasts for risk management and position sizing.
 
 > *"Fractal geometry: expressing complex behavior in simple rules"* — Mandelbrot
 
