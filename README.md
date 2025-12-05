@@ -226,6 +226,10 @@ forecast = mean(volatility)
 ### **Installation**
 
 ```bash
+
+#Clone the repo
+git clone https://github.com/AyanDot/MMAR-vs-GARCH
+
 # Create virtual environment
 python -m venv .venv
 
