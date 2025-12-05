@@ -252,6 +252,7 @@ Edit `config.py` to set your data parameters:
 ```python
 SYMBOL = "EURUSD"
 TIMEFRAME_MT5 = "M15"  # 15-minute bars
+TIMEFRAME_MINUTES = 15  # For internal calculations (matching TIMEFRAME_MT5)
 START_DATE = "2025-05-15"
 END_DATE = "2025-07-01"
 FORECAST_DAYS = 25
