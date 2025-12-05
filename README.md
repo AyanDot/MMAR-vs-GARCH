@@ -15,6 +15,12 @@ This implementation follows Zhang's empirical application of Mandelbrot's MMAR t
 
 ---
 
+## License
+This project is licensed under CC BY-NC 4.0. Free for academic and personal use
+Commercial use requires permission. See LICENSE.md for details.
+
+---
+
 ## 🎯 What is MMAR?
 
 The MMAR models financial returns as a **Fractional Brownian Motion (FBM) compounded by multifractal trading time**:
