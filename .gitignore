@@ -12,13 +12,14 @@ __pycache__/
 .Python
 
 # Results and outputs (generated data, should not be in git)
-results/
-plots/
-data/*.csv
-
-# Keep directory structure but ignore contents
+# Note: Use /* to ignore contents but not the directory itself
+results/*
 !results/.gitkeep
+
+plots/*
 !plots/.gitkeep
+
+data/*
 !data/.gitkeep
 
 # Jupyter Notebook
