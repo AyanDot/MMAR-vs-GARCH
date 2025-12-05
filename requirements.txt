@@ -1,0 +1,29 @@
+# MMAR Volatility Forecasting - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core scientific computing
+numpy>=1.24.0
+pandas>=2.0.0
+scipy>=1.10.0
+
+# Plotting
+matplotlib>=3.7.0
+
+# Statistical analysis
+statsmodels>=0.14.0
+
+# GARCH models (for comparison with MMAR)
+arch>=6.0.0
+
+# Hurst exponent estimation (robust R/S method for Step 2)
+nolds>=0.5.2
+
+# MetaTrader 5 integration (for live data)
+MetaTrader5>=5.0.45
+
+# Optional: Jupyter notebook support (for analysis)
+# jupyter>=1.0.0
+# ipython>=8.0.0
+
+# Optional: Performance optimization
+# numba>=0.57.0  # JIT compilation for speed
