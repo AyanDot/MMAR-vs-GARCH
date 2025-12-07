@@ -103,13 +103,13 @@ RANDOM_SEED = 42
 # =============================================================================
 
 # Directory for saving results
-OUTPUT_DIR = "C:\\Users\\ayanm\\AppData\\Roaming\\MetaQuotes\\Terminal\\D0E8209F77C8CF37AD8BF550E51FF075\\MQL5\\Scripts\\MMAR_Forecast\\results"
+OUTPUT_DIR = ""
 
 # Directory for saving plots
-PLOT_DIR = "C:\\Users\\ayanm\\AppData\\Roaming\\MetaQuotes\\Terminal\\D0E8209F77C8CF37AD8BF550E51FF075\\MQL5\\Scripts\\MMAR_Forecast\\plots"
+PLOT_DIR = ""
 
 # Directory for data
-DATA_DIR = "C:\\Users\\ayanm\\AppData\\Roaming\\MetaQuotes\\Terminal\\D0E8209F77C8CF37AD8BF550E51FF075\\MQL5\\Scripts\\MMAR_Forecast\\data"
+DATA_DIR = ""
 
 # Verbose output
 VERBOSE = True
